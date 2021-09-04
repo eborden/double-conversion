@@ -1,4 +1,6 @@
-{-# LANGUAGE CPP, MagicHash, Rank2Types #-}
+{-# LANGUAGE CPP        #-}
+{-# LANGUAGE MagicHash  #-}
+{-# LANGUAGE Rank2Types #-}
 
 -- |
 -- Module      : Data.Double.Conversion.Text
@@ -23,18 +25,18 @@ module Data.Double.Conversion.Text
     , toShortest
     ) where
 
-import Control.Monad (when)
+import           Control.Monad              (when)
 #if MIN_VERSION_base(4,4,0)
-import Control.Monad.ST.Unsafe (unsafeIOToST)
+import           Control.Monad.ST.Unsafe    (unsafeIOToST)
 #else
-import Control.Monad.ST (unsafeIOToST)
+import           Control.Monad.ST           (unsafeIOToST)
 #endif
-import Control.Monad.ST (runST)
-import Data.Double.Conversion.FFI
-import Data.Text.Internal (Text(Text))
-import Foreign.C.Types (CDouble, CInt)
-import GHC.Prim (MutableByteArray#)
-import qualified Data.Text.Array as A
+import           Control.Monad.ST           (runST)
+import           Data.Double.Conversion.FFI
+import qualified Data.Text.Array            as A
+import           Data.Text.Internal         (Text (Text))
+import           Foreign.C.Types            (CDouble, CInt)
+import           GHC.Prim                   (MutableByteArray#)
 
 -- | Compute a representation in exponential format with the requested
 -- number of digits after the decimal point. The last emitted digit is
@@ -76,7 +78,8 @@ convert func len act val = runST go
   where
     go = do
       buf <- A.new (fromIntegral len)
-      size <- unsafeIOToST $ act (realToFrac val) (A.maBA buf)
+      let (A.MutableByteArray maBA) = buf
+      size <- unsafeIOToST $ act (realToFrac val) maBA
       when (size == -1) .
         fail $ "Data.Double.Conversion.Text." ++ func ++
                ": conversion failed (invalid precision requested)"
